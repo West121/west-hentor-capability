@@ -1,0 +1,45 @@
+{
+  "name": "frontend",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
+    "test:unit": "node tests/subcontractSearch.test.ts && node tests/subcontractImportFlow.test.ts && node tests/abilitySearch.test.ts && node tests/abilityQueryColumns.test.ts && node tests/abilityDescriptionHtml.test.ts && node tests/abilityDescriptionEditor.test.ts && node tests/abilityDescriptionFormatOptions.test.ts && node tests/abilityDescriptionWordImage.test.ts && node tests/profilePictureUploadInput.test.ts && node tests/externalLoginForm.test.ts && node tests/tokenAuthRequest.test.ts && node tests/accountSecurityCodePrompt.test.ts && node tests/accountEmailCodeRequest.test.ts && node tests/accountImpersonationRequest.test.ts && node tests/accountRegisterPasswordLimit.test.ts && node tests/accountRegisterFieldLimits.test.ts && node tests/accountResetEmailLimit.test.ts && node tests/accountTenantAvailabilityLimit.test.ts && node tests/profileSmsCodePrompt.test.ts && node tests/profileFieldLimits.test.ts && node tests/loginTwoFactorPrompt.test.ts && node tests/usersResetPasswordText.test.ts && node tests/usersRandomPasswordControl.test.ts && node tests/usersPasswordLimit.test.ts && node tests/usersFieldLimits.test.ts && node tests/userPermissionRequest.test.ts && node tests/orgUnitsDisplayNameLimit.test.ts && node tests/orgUnitRequest.test.ts && node tests/tenantFormFieldLimits.test.ts && node tests/tenantRegistrationRequest.test.ts && node tests/tenantFeaturesRequest.test.ts && node tests/userDelegationRequest.test.ts && node tests/languageFormFieldLimits.test.ts && node tests/languageTextUpdateRequest.test.ts && node tests/languageTextsRequest.test.ts && node tests/laboratoryRequest.test.ts && node tests/installSetupRequest.test.ts && node tests/abilityDescriptionImageUpload.test.ts && node tests/abilityTemplateRequest.test.ts && node tests/fileDtoContract.test.ts && node tests/userImportStatus.test.ts && node tests/notificationChatRequest.test.ts && node tests/notificationSubscriptionLimit.test.ts && node tests/dynamicParameterRequest.test.ts && node tests/settingsUiRequest.test.ts && node tests/settingsTestEmailLimit.test.ts && node tests/dashboardRequest.test.ts && node tests/demoUiRequest.test.ts && node tests/miscReadRequest.test.ts && node tests/paymentRequest.test.ts && node tests/appserviceMethodCoverage.test.ts && node tests/editionMoveRequest.test.ts && node tests/paymentGatewayOptions.test.ts && node tests/postNoBodyRequest.test.ts && node tests/putUpdateRequest.test.ts && node tests/favoritePageDefaultGroup.test.ts && node tests/cachePageOriginalDto.test.ts && node tests/notificationSettingsOriginalDto.test.ts && node tests/missingOriginalRoutes.test.ts && node tests/originalRouteAliases.test.ts && node tests/tenantBrandingUrls.test.ts",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@ant-design/icons": "^6.2.5",
+    "@tiptap/extension-color": "^3.26.0",
+    "@tiptap/extension-image": "^3.26.0",
+    "@tiptap/extension-link": "^3.26.0",
+    "@tiptap/extension-text-align": "^3.26.0",
+    "@tiptap/extension-text-style": "^3.26.0",
+    "@tiptap/extension-underline": "^3.26.0",
+    "@tiptap/react": "^3.26.0",
+    "@tiptap/starter-kit": "^3.26.0",
+    "antd": "^6.4.3",
+    "axios": "^1.17.0",
+    "dayjs": "^1.11.21",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "react-router-dom": "^7.17.0",
+    "zustand": "^5.0.14"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^24.12.3",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.1",
+    "eslint": "^10.3.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.2",
+    "globals": "^17.6.0",
+    "typescript": "~6.0.2",
+    "typescript-eslint": "^8.59.2",
+    "vite": "^8.0.12"
+  }
+}

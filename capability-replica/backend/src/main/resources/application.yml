@@ -1,0 +1,40 @@
+server:
+  port: 9901
+
+app:
+  server-root-address: http://localhost:9901/
+
+replica:
+  store:
+    mode: database
+
+spring:
+  application:
+    name: capability-replica
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:sqlserver://127.0.0.1:14333;databaseName=sgsmineralscapability;encrypt=false;trustServerCertificate=true}
+    username: ${SPRING_DATASOURCE_USERNAME:sa}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+payment:
+  paypal:
+    is-active: true
+    client-id: ""
+    demo-username: ""
+    demo-password: ""
+  stripe:
+    is-active: true
+    publishable-key: ""

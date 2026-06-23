@@ -1,0 +1,69 @@
+# Ignore everything at the extracted application root by default. The root
+# contains production SQL dumps, original .NET binaries, decompiled output,
+# runtime folders, and local debugging artifacts that should not be versioned.
+/*
+
+# Keep the replica source tree and small analysis notes.
+!/.gitignore
+!/capability-replica/
+!/capability-replica/**
+!/.analysis/
+!/.analysis/**
+
+# Local OS/editor artifacts.
+.DS_Store
+*.swp
+*.swo
+
+# Secrets and environment overrides.
+.env
+.env.*
+*.env
+*.env.local
+capability.env
+
+# Database dumps and backups.
+*.sql
+*.bak
+*.bak.*
+*.bacpac
+*.mdf
+*.ldf
+
+# Original binaries and generated archives.
+*.dll
+*.pdb
+*.exe
+*.so
+*.dylib
+*.jar
+*.war
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+
+# Runtime output and local debug traces.
+*.log
+*.pid
+.run/
+/logs/
+/capability-replica/logs/
+/capability-replica/backend/logs/
+.playwright-mcp/
+
+# Java build output.
+target/
+**/target/
+
+# Frontend dependencies and build output.
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+.vite/
+**/.vite/
+
+# Runtime data snapshots. SQL Server is the source of truth for this replica.
+capability-replica/data/*.json
+capability-replica/backend/data/*.json
