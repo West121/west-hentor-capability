@@ -25,7 +25,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-/** Local replica store with seed data and a JSON snapshot for restart persistence. */
+/** Local replica store backed by the imported SQL Server database. */
 @Service
 public class CapabilityStore {
     private static final String ABILITY_ENTITY = "SgsMineral.CapabilityTable.AbilityTables.Ability";
@@ -62,6 +62,19 @@ public class CapabilityStore {
             "aster_cai",
             "maggie_che",
             "Jack-c_chen");
+    private static final List<String> TENANT_ADMIN_MENU_PERMISSIONS = List.of(
+            "Pages.AbilityManagement",
+            "Pages.AbilityQuery",
+            "Pages.Administration",
+            "Pages.Administration.OrganizationUnits",
+            "Pages.Administration.Roles",
+            "Pages.Administration.Users",
+            "Pages.AbilityManagement.AbilitySetting",
+            "Pages.Administration.Laboratory",
+            "Pages.Administration.StandardUpdate",
+            "Pages.Log",
+            "Pages.Log.AbilityHistory",
+            "Pages.Administration.AuditLogs");
     private static final Map<String, String> REQUIRED_ABILITY_FIELDS = Map.ofEntries(
             Map.entry("typeName", "类型"),
             Map.entry("samplingName", "样品名称"),
@@ -152,6 +165,7 @@ public class CapabilityStore {
                 applyProductionDatabaseRows();
                 ensureUserPasswords();
                 ensurePlatformPermissions();
+                ensureTenantAdminMenuPermissions();
                 ensureLanguageData();
                 ensureNotificationData();
                 ensureCacheData();
@@ -165,7 +179,6 @@ public class CapabilityStore {
                 ensureProductionBusinessLineData();
                 ensureAuditHistoryData();
                 ensureAbilityDescriptionData();
-                grantStaticRolesAllPermissions();
             } finally {
                 loadingDatabaseState = false;
             }
@@ -174,7 +187,7 @@ public class CapabilityStore {
         }
     }
 
-    /** Restores local data so changes survive backend restarts. */
+    /** Legacy snapshot loader retained for non-database mode, which is disabled by the constructor. */
     private boolean loadSnapshot() {
         if (!Files.exists(snapshotPath)) {
             return false;
@@ -256,7 +269,7 @@ public class CapabilityStore {
                     | ensureCacheData() | ensureChatData() | ensureDynamicParameterData() | ensureWebhookData()
                     | ensureUiCustomizationData() | ensureTenantPlatformData() | ensureAccountSecurityData()
                     | ensureOrganizationUnitData() | ensureProductionBusinessLineData() | ensureAuditHistoryData()
-                    | ensureAbilityDescriptionData() | grantStaticRolesAllPermissions();
+                    | ensureAbilityDescriptionData();
             if (changed) {
                 persist();
             }
@@ -266,7 +279,7 @@ public class CapabilityStore {
         }
     }
 
-    /** Writes a compact JSON snapshot after every local data change. */
+    /** Database mode persists through SQL Server write paths; the legacy JSON snapshot is disabled. */
     private synchronized void persist() {
         if (databaseStoreMode) {
             return;
@@ -6644,19 +6657,30 @@ public class CapabilityStore {
     public Optional<UserItem> userByUserName(String userName) {
         return users.values().stream()
                 .filter(user -> equalsText(user.userName, userName))
-                .findFirst();
+                .max(userLookupComparator());
     }
 
     public Optional<UserItem> userByEmail(String emailAddress) {
         return users.values().stream()
                 .filter(user -> equalsText(user.emailAddress, emailAddress))
-                .findFirst();
+                .max(userLookupComparator());
     }
 
     public Optional<UserItem> userByUserNameOrEmail(String value) {
         return users.values().stream()
                 .filter(user -> equalsText(user.userName, value) || equalsText(user.emailAddress, value))
-                .findFirst();
+                .max(userLookupComparator());
+    }
+
+    private Comparator<UserItem> userLookupComparator() {
+        return Comparator
+                .comparing((UserItem user) -> user != null && user.isActive)
+                .thenComparingInt(this::userRoleCount)
+                .thenComparing(user -> user == null || user.id == null ? 0L : user.id);
+    }
+
+    private int userRoleCount(UserItem user) {
+        return user == null || user.assignedRoleNames == null ? 0 : user.assignedRoleNames.size();
     }
 
     public Optional<TenantItem> tenantByTenancyName(String tenancyName) {
@@ -7507,7 +7531,17 @@ public class CapabilityStore {
     private Optional<RoleItem> roleByName(String name) {
         return roles.values().stream()
                 .filter(role -> equalsText(role.name, name))
-                .findFirst();
+                .max(roleLookupComparator());
+    }
+
+    private Comparator<RoleItem> roleLookupComparator() {
+        return Comparator
+                .comparingInt(this::rolePermissionCount)
+                .thenComparing(role -> role == null || role.id == null ? 0 : role.id);
+    }
+
+    private int rolePermissionCount(RoleItem role) {
+        return role == null || role.grantedPermissionNames == null ? 0 : role.grantedPermissionNames.size();
     }
 
     private List<String> expandPermission(String permissionName) {
@@ -8700,21 +8734,55 @@ public class CapabilityStore {
         return true;
     }
 
-    private boolean grantStaticRolesAllPermissions() {
-        List<String> allPermissionNames = permissions.stream().map(item -> item.name).toList();
+    private boolean ensureTenantAdminMenuPermissions() {
+        RoleItem adminRole = roleByName("Admin").orElse(null);
+        if (adminRole == null) {
+            return false;
+        }
         boolean changed = false;
-        for (RoleItem role : roles.values()) {
-            if (!role.isStatic || !equalsText(role.name, "Admin")) {
+        for (String permissionName : TENANT_ADMIN_MENU_PERMISSIONS) {
+            if (safe(permissionName).isBlank()) {
                 continue;
             }
-            for (String permissionName : allPermissionNames) {
-                if (!role.grantedPermissionNames.contains(permissionName)) {
-                    role.grantedPermissionNames.add(permissionName);
-                    changed = true;
-                }
+            if (!adminRole.grantedPermissionNames.contains(permissionName)) {
+                adminRole.grantedPermissionNames.add(permissionName);
+                changed = true;
             }
+            ensureDatabaseRolePermission(adminRole.id, permissionName);
         }
+        adminRole.grantedPermissionNames = uniqueStrings(adminRole.grantedPermissionNames);
         return changed;
+    }
+
+    private void ensureDatabaseRolePermission(Integer roleId, String permissionName) {
+        if (!databaseStoreMode || roleId == null || safe(permissionName).isBlank()) {
+            return;
+        }
+        String databasePermissionName = truncateForColumn(permissionName, 128);
+        Integer count = jdbcTemplate.queryForObject("""
+                        SELECT COUNT(1)
+                        FROM dbo.SgsPermissions
+                        WHERE TenantId = 1
+                          AND RoleId = ?
+                          AND UserId IS NULL
+                          AND IsGranted = 1
+                          AND Name = ?
+                        """,
+                Integer.class,
+                roleId,
+                databasePermissionName);
+        if (count != null && count > 0) {
+            return;
+        }
+        jdbcTemplate.update("""
+                        INSERT INTO dbo.SgsPermissions
+                            (CreationTime, CreatorUserId, Discriminator, IsGranted, Name, TenantId, RoleId, UserId)
+                        VALUES (?, ?, 'RolePermissionSetting', 1, ?, 1, ?, NULL)
+                        """,
+                Timestamp.valueOf(LocalDateTime.now()),
+                2L,
+                databasePermissionName,
+                roleId);
     }
 
     private boolean ensureLanguageData() {

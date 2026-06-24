@@ -99,7 +99,7 @@ public class WebLogService {
             LocalDateTime now = LocalDateTime.now();
             List<String> lines = List.of(
                     "INFO  " + now.minusMinutes(12) + " Capability replica backend started",
-                    "DEBUG " + now.minusMinutes(10) + " Loaded local JSON snapshot",
+                    "DEBUG " + now.minusMinutes(10) + " Loaded SQL Server database state",
                     "INFO  " + now.minusMinutes(8) + " Registered ABP-style application service routes",
                     "WARN  " + now.minusMinutes(4) + " Production external providers are disabled in local replica",
                     "INFO  " + now.minusMinutes(1) + " WebLogAppService latest log request ready"
