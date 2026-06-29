@@ -1,0 +1,3 @@
+name = "west-hentor-capability-api"
+main = "api-proxy-worker.js"
+compatibility_date = "2026-06-29"
