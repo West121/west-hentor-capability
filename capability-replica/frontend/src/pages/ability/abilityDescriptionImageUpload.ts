@@ -1,6 +1,7 @@
 import type { UeditorUploadOutput } from '../../types/domain';
+import { baseURL } from '../../services/apiBaseUrl';
 
-export const defaultUeditorImageBaseUrl = import.meta.env?.VITE_API_BASE_URL
+export const defaultUeditorImageBaseUrl = baseURL
   ?? globalThis.location?.origin
   ?? '';
 

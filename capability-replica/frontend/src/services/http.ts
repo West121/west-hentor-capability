@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
-
-export const baseURL = import.meta.env?.VITE_API_BASE_URL ?? '';
+export { baseURL } from './apiBaseUrl';
+import { baseURL } from './apiBaseUrl';
 
 // Axios client unwraps the ABP envelope used by the copied backend.
 export const http = axios.create({ baseURL, withCredentials: false });
