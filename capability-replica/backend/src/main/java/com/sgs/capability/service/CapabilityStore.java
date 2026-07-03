@@ -64,6 +64,16 @@ public class CapabilityStore {
             "Jack-c_chen");
     private static final List<String> TENANT_ADMIN_MENU_PERMISSIONS = List.of(
             "Pages.AbilityManagement",
+            "Pages.AbilityManagement.Ability",
+            "Pages.AbilityManagement.Ability.Create",
+            "Pages.AbilityManagement.Ability.Edit",
+            "Pages.AbilityManagement.Ability.PublicEdit",
+            "Pages.AbilityManagement.Ability.Delete",
+            "Pages.AbilityManagement.Ability.DeleteAll",
+            "Pages.AbilityManagement.Ability.ImportExcel",
+            "Pages.AbilityManagement.Ability.History",
+            "Pages.AbilityManagement.EditDesc",
+            "Pages.AbilityManagement.Sample",
             "Pages.AbilityQuery",
             "Pages.Administration",
             "Pages.Administration.OrganizationUnits",
