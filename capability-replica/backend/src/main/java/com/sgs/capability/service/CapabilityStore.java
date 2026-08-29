@@ -51,6 +51,8 @@ public class CapabilityStore {
     private static final int SUBSCRIPTION_RECURRING_MANUAL = 2;
     private static final List<String> PRODUCTION_BUSINESS_LINES = List.of(
             "NF", "SIR", "CHEM", "EMS", "OGC", "General & XRD", "Lab Group");
+    private static final Set<String> LAB_GROUP_ONLY_ABILITY_PROPERTIES = Set.of(
+            "standardNoSgs", "standardNoSop", "standardNoOthers", "standardNoDz");
     private static final List<String> PRODUCTION_USER_ORDER = List.of(
             "admin",
             "Davis_Cheng",
@@ -7701,6 +7703,7 @@ public class CapabilityStore {
     }
 
     public OrgAbilitySetting saveOrgSetting(OrgAbilitySetting input) {
+        input.propertyName = scopedAbilityPropertyNames(input.orgId, input.propertyName);
         if (databaseStoreMode && !loadingDatabaseState) {
             upsertDatabaseOrgSetting(input);
         }
@@ -7714,11 +7717,20 @@ public class CapabilityStore {
         return defaultProperties().stream().peek(prop -> prop.enabled = propertyEnabled(setting.propertyName, prop.name)).toList();
     }
 
+    /** Returns only fields applicable to the selected business line. */
+    public List<AbilityProperty> orgAbilityProperties(long orgId) {
+        Set<String> enabledProperties = new LinkedHashSet<>(orgSettingPropertyNames(orgId));
+        return defaultProperties().stream()
+                .filter(property -> isLabGroup(orgId) || !isLabGroupOnlyProperty(property.camelCase))
+                .peek(property -> property.enabled = enabledProperties.contains(property.camelCase))
+                .toList();
+    }
+
     private MyOrgSettingDto toMyOrgSetting(OrganizationUnit org, OrgAbilitySetting setting) {
         MyOrgSettingDto dto = new MyOrgSettingDto();
         dto.orgId = org.id;
         dto.orgName = org.displayName;
-        dto.propertyList = setting.propertyName.stream().map(this::abilityPropertyCamelCase).toList();
+        dto.propertyList = scopedAbilityPropertyNames(org.id, setting.propertyName);
         dto.lab = new ArrayList<>(setting.lab);
         dto.description = setting.description;
         dto.isPublic = setting.isPublic;
@@ -7726,7 +7738,25 @@ public class CapabilityStore {
     }
 
     public List<String> orgSettingPropertyNames(long orgId) {
-        return orgSetting(orgId).propertyName.stream().map(this::abilityPropertyCamelCase).toList();
+        return scopedAbilityPropertyNames(orgId, orgSetting(orgId).propertyName);
+    }
+
+    private List<String> scopedAbilityPropertyNames(long orgId, Collection<String> propertyNames) {
+        return (propertyNames == null ? List.<String>of() : propertyNames).stream()
+                .map(this::abilityPropertyCamelCase)
+                .filter(property -> isLabGroup(orgId) || !isLabGroupOnlyProperty(property))
+                .distinct()
+                .toList();
+    }
+
+    private boolean isLabGroup(long orgId) {
+        return orgUnits.stream()
+                .filter(org -> Objects.equals(org.id, orgId))
+                .anyMatch(org -> equalsText(org.displayName, "Lab Group"));
+    }
+
+    private boolean isLabGroupOnlyProperty(String propertyName) {
+        return LAB_GROUP_ONLY_ABILITY_PROPERTIES.contains(abilityPropertyCamelCase(propertyName));
     }
 
     public List<AbilityHistoryItem> history() {

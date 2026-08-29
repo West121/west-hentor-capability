@@ -21,6 +21,7 @@
 *.env
 *.env.local
 capability.env
+capability-replica/deploy/windows/backend.env.ps1
 
 # Database dumps and backups.
 *.sql

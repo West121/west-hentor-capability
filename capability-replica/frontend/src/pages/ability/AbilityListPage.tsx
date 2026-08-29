@@ -102,11 +102,22 @@ const abilityManagementColumnOrder = [
   'standardNo',
   'remark',
   'methodName',
+  'standardNoSgs',
+  'standardNoSop',
+  'standardNoOthers',
+  'standardNoDz',
   'methodEngName',
   'cycleWorkingDay',
   'massRequired',
   'sizeRequired',
 ];
+
+const labGroupOnlyProperties = new Set([
+  'standardNoSgs',
+  'standardNoSop',
+  'standardNoOthers',
+  'standardNoDz',
+]);
 
 const defaultAbilityEditorPropertyOrder: Array<keyof Ability> = [
   'typeName',
@@ -130,10 +141,6 @@ const defaultAbilityEditorPropertyOrder: Array<keyof Ability> = [
   'industryStandardRemark',
   'otherNo',
   'otherRemark',
-  'standardNoSgs',
-  'standardNoSop',
-  'standardNoOthers',
-  'standardNoDz',
   'cycleWorkingDay',
   'testTime',
   'testTimeRemark',
@@ -160,6 +167,13 @@ const requiredAbilityProperties = new Set<keyof Ability>([
   'detectionLimit',
   'price',
 ]);
+
+function visibleAbilityProperties(setting: MyOrgSetting | undefined, fallback: readonly string[]) {
+  const properties = setting?.propertyList?.length ? setting.propertyList : fallback;
+  return setting?.orgName === 'Lab Group'
+    ? properties
+    : properties.filter((property) => !labGroupOnlyProperties.has(property));
+}
 
 // Ability management keeps the original ABP routes and grouped edit workflow.
 export default function AbilityListPage() {
@@ -208,8 +222,7 @@ export default function AbilityListPage() {
     return selected ?? currentSetting;
   }, [currentSetting, modalOrgId, orgSettings]);
   const editableProperties = useMemo(() => {
-    const properties = modalSetting?.propertyList?.length ? modalSetting.propertyList : defaultAbilityEditorPropertyOrder;
-    return new Set<string>(properties);
+    return new Set<string>(visibleAbilityProperties(modalSetting, defaultAbilityEditorPropertyOrder));
   }, [modalSetting]);
   const modalTypeSelectOptions = useMemo(() => {
     const names = new Map<string, string>();
@@ -223,7 +236,7 @@ export default function AbilityListPage() {
   const tableColumns = useMemo<ColumnsType<Ability>>(() => {
     // Original UI uses GetMyOrgSetting.propertyList to decide visible business columns.
     const configuredPropertySet = new Set(
-      (currentSetting?.propertyList?.length ? currentSetting.propertyList : defaultAbilityPropertyOrder).filter(
+      visibleAbilityProperties(currentSetting, defaultAbilityPropertyOrder).filter(
         (property) => property !== 'orgName' && property !== 'labAbility',
       ),
     );
@@ -888,6 +901,26 @@ export default function AbilityListPage() {
           ) : null}
           {isEditableProperty('methodName') ? (
             <Form.Item name="methodName" label="方法中文描述" rules={abilityFieldRules('methodName')}>
+              <Input />
+            </Form.Item>
+          ) : null}
+          {isEditableProperty('standardNoSgs') ? (
+            <Form.Item name="standardNoSgs" label="标准编号SGS">
+              <Input />
+            </Form.Item>
+          ) : null}
+          {isEditableProperty('standardNoSop') ? (
+            <Form.Item name="standardNoSop" label="标准编号SOP">
+              <Input />
+            </Form.Item>
+          ) : null}
+          {isEditableProperty('standardNoOthers') ? (
+            <Form.Item name="standardNoOthers" label="标准编号OTHERS">
+              <Input />
+            </Form.Item>
+          ) : null}
+          {isEditableProperty('standardNoDz') ? (
+            <Form.Item name="standardNoDz" label="标准编号DZ">
               <Input />
             </Form.Item>
           ) : null}

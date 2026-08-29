@@ -135,6 +135,41 @@ class AbilityPropertyParityTest {
         assertThat(setting.get(1).asText()).isEqualTo("methodName");
     }
 
+    @Test
+    void labGroupSpecialStandardFieldsAreScopedToLabGroupOnly() throws Exception {
+        List<String> configuredProperties = List.of(
+                "typeName",
+                "methodName",
+                "standardNoSgs",
+                "standardNoSop",
+                "standardNoOthers",
+                "standardNoDz"
+        );
+        long labGroupId = createOrgUnit("Lab Group");
+        long nfId = createOrgUnit("TDD-NF-SPECIAL-FIELDS");
+
+        store.saveOrgSetting(setting(labGroupId, configuredProperties));
+        store.saveOrgSetting(setting(nfId, configuredProperties));
+
+        JsonNode labGroupProperties = postAbp("/api/services/app/AbilityProperty/OrgAbilityPropertyList", Map.of("orgId", labGroupId))
+                .path("result")
+                .path("propertyList");
+        assertThat(names(labGroupProperties)).contains(
+                "StandardNoSgs", "StandardNoSop", "StandardNoOthers", "StandardNoDz");
+        assertThat(findByName(labGroupProperties, "StandardNoSgs").path("enabled").asBoolean()).isTrue();
+
+        JsonNode regularProperties = postAbp("/api/services/app/AbilityProperty/OrgAbilityPropertyList", Map.of("orgId", nfId))
+                .path("result")
+                .path("propertyList");
+        assertThat(names(regularProperties)).doesNotContain(
+                "StandardNoSgs", "StandardNoSop", "StandardNoOthers", "StandardNoDz");
+
+        JsonNode regularSetting = getAbp("/api/services/app/AbilityProperty/GetOrgAbilitySetting", "OrgId", String.valueOf(nfId))
+                .path("result");
+        assertThat(values(regularSetting)).doesNotContain(
+                "standardNoSgs", "standardNoSop", "standardNoOthers", "standardNoDz");
+    }
+
     private OrgAbilitySetting setting(long orgId, List<String> properties) {
         OrgAbilitySetting setting = new OrgAbilitySetting();
         setting.orgId = orgId;
@@ -143,6 +178,13 @@ class AbilityPropertyParityTest {
         setting.isPublic = true;
         setting.description = "GET query setting";
         return setting;
+    }
+
+    private long createOrgUnit(String displayName) throws Exception {
+        return postAbp("/api/services/app/OrganizationUnit/CreateOrganizationUnit", Map.of(
+                "parentId", 1,
+                "displayName", displayName
+        )).path("result").path("id").asLong();
     }
 
     private JsonNode findByTitle(JsonNode rows, String title) {
@@ -169,6 +211,14 @@ class AbilityPropertyParityTest {
             names.add(row.path("name").asText());
         }
         return names;
+    }
+
+    private List<String> values(JsonNode rows) {
+        List<String> values = new ArrayList<>();
+        for (JsonNode row : rows) {
+            values.add(row.asText());
+        }
+        return values;
     }
 
     private JsonNode postAbp(String url, Object payload) throws Exception {

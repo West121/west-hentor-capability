@@ -34,7 +34,7 @@ public class AbilityPropertyController {
     public AbpResponse<OrgAbilitySettingOutput> orgList(@RequestBody OrgAbilitySetting input) {
         long orgId = input == null ? 1L : input.orgId;
         OrgAbilitySetting setting = store.orgSetting(orgId);
-        return AbpResponse.ok(new OrgAbilitySettingOutput(store.abilityProperties(orgId), setting.isPublic, setting.description));
+        return AbpResponse.ok(new OrgAbilitySettingOutput(store.orgAbilityProperties(orgId), setting.isPublic, setting.description));
     }
 
     @PostMapping("/GetOrgAbilitySetting")
